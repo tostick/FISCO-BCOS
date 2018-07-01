@@ -258,7 +258,7 @@ void Client::init(p2p::HostApi* _extNet, std::string const& _dbPath, WithExistin
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);
 	doWork(false);
-	startWorking();
+	startWorking(); /* 启动客户端线程，执行doWork工作 */
 }
 
 ImportResult Client::queueBlock(bytes const& _block, bool _isSafe)

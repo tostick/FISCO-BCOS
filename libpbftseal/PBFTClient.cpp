@@ -58,12 +58,12 @@ PBFTClient::PBFTClient(
     WithExisting _forceAction,
     TransactionQueue::Limits const& _limits
 ):
-	Client(_params, _networkID, _host, _gpForAdoption, _dbPath, _forceAction, _limits)
+	Client(_params, _networkID, _host, _gpForAdoption, _dbPath, _forceAction, _limits) /* 初始化以太坊客户端 */
 {
 	// will throw if we're not an PBFT seal engine.
 	asPBFTClient(*this);
 
-	init(_params, _host);
+	init(_params, _host);  /* 初始化PBFT共识算法并启动相应的线程操作 */
 
 	m_empty_block_flag = false;
 	m_exec_time_per_tx = 0;
@@ -85,11 +85,11 @@ void PBFTClient::init(ChainParams const& _params, p2p::HostApi *_host) {
 	auto pbft_host = _host->registerCapability(make_shared<PBFTHost>([this](unsigned _id, std::shared_ptr<Capability> _peer, RLP const & _r) {
 		pbft()->onPBFTMsg(_id, _peer, _r);
 	}));
-
+    /* 设置pbft对应的环境参数 */
 	pbft()->initEnv(pbft_host, &m_bc, &m_stateDB, &m_bq, _host->keyPair(), static_cast<unsigned>(sealEngine()->getIntervalBlockTime()) * 3);
 	pbft()->setOmitEmptyBlock(m_omit_empty_block);
-
-	pbft()->reportBlock(bc().info(), bc().details().totalDifficulty);
+    
+	pbft()->reportBlock(bc().info(), bc().details().totalDifficulty); /* 上报最新块到pbft共识类中 */
 
 	pbft()->onSealGenerated([ this ](bytes const & _block, bool _isOurs) {
 		if (!submitSealed(_block, _isOurs))
@@ -115,8 +115,8 @@ PBFT* PBFTClient::pbft() const
 
 void PBFTClient::startSealing() {
 	setName("Client");
-	pbft()->reportBlock(bc().info(), bc().details().totalDifficulty);
-	pbft()->startGeneration();
+	pbft()->reportBlock(bc().info(), bc().details().totalDifficulty); /* 上报最新块 */
+	pbft()->startGeneration(); /* 启动客户端线程，执行doWork工作 */
 	Client::startSealing();
 }
 

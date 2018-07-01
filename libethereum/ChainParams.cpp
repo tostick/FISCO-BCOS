@@ -182,7 +182,7 @@ ChainParams ChainParams::loadGenesis(string const& _json, h256 const& _stateRoot
 
 	cp.genesisState = jsonToAccountMap(_json, cp.accountStartNonce, nullptr, &cp.precompiled);
 
-	
+	/* 获取节点NodeId的信息 */
 	if (genesis.count("initMinerNodes"))
 	{
 		for (auto initNode : genesis["initMinerNodes"].get_array())

@@ -475,21 +475,43 @@ bool isFalse(std::string const& _m)
 	return _m == "off" || _m == "no" || _m == "false" || _m == "0";
 }
 
+/*
+目录	                    说明
+abi                 CNS(合约命名服务)模块代码
+eth                 主入口目录，其中main.cpp包含main函数入口
+libchannelserver    AMOP(链上链下通信协议)实现目录
+libdevcore          基础通用组件实现目录，如工具类函数、基础数据类型结构定义、IO操作函数、读写锁、内
+存DB、TrieDB、SHA3实现、RLP编解码实现、Worker模型等等
+libdiskencryption   落盘存储加密实现目录
+libethcore          区块链核心数据结构目录。如ABI、秘钥管理、区块头、预编译、交易结构等等
+libethereum         区块链主框架逻辑目录。如交易池、系统合约、节点管理、块链、块、链参数等等
+libevm              虚拟机主目录。如解释器、JIT等等
+libevmcore          OPCODE指令集定义、定价
+libp2p              区块链P2P网络主目录。如握手、网络包编解码、会话管理等等
+libpaillier         同态加密算法目录
+libpbftseal         PBFT共识插件实现目录
+libraftseal         RAFT共识插件实现目录
+libstatistics       访问频率统计与控制实现目录
+libweb3jsonrpc      web3 RPC实现目录
+sample              一键安装与部署
+scripts             与安装相关的脚本
+systemproxy         系统合约实现目录
+*/
 
 int main(int argc, char** argv)
 {
-	setDefaultOrCLocale();
+	setDefaultOrCLocale(); /* 设置当前环境变量 */
 	// Init defaults
-	Defaults::get();
-	//Ethash::init();
-	NoProof::init();
-	PBFT::init();
-	Raft::init();
-	SinglePoint::init();
+	Defaults::get(); /* 调用构造函数（m_dbPath = getDataDir();），新建s_this指针 */
+	//Ethash::init(); /* 由于共识算法被修改，因此不再使用Ethash进行共识 */
+	NoProof::init();  /* 初始化共识算法，调用ETH_REGISTER_SEAL_ENGINE(NoProof)*/
+	PBFT::init();     /* 初始化共识算法pbft, 调用ETH_REGISTER_SEAL_ENGINE(PBFT); 在PBFTClient中存在init初始化启动各个模块线程 */
+	Raft::init();     /* 初始化共识算法raft，调用ETH_REGISTER_SEAL_ENGINE(Raft);*/
+	SinglePoint::init(); /* 初始化共识算法, 调用ETH_REGISTER_SEAL_ENGINE(SinglePoint); */
 
 
 	/// Operating mode.
-	OperationMode mode = OperationMode::Node;
+	OperationMode mode = OperationMode::Node; /* 默认操作模式是节点模式 */
 //	unsigned prime = 0;
 //	bool yesIReallyKnowWhatImDoing = false;
 	strings scripts;
@@ -514,6 +536,8 @@ int main(int argc, char** argv)
 	std::string rpcCorsDomain = "";
 
 	string jsonAdmin;
+
+    /*初始化参数ChainParams列表，调用ChainParams::ChainParams(string const& _json, h256 const&  _stateRoot)函数 */
 	ChainParams chainParams(genesisInfo(eth::Network::MainNetwork), genesisStateRoot(eth::Network::MainNetwork));
 	u256 gasFloor = Invalid256;
 	string privateChain;
@@ -713,7 +737,7 @@ int main(int argc, char** argv)
 				LOG(ERROR) << "Bad " << arg << " option: " << argv[i] << "\n";
 				return -1;
 			}
-		else if (arg == "--private" && i + 1 < argc)
+		else if (arg == "--private" && i + 1 < argc)  /*私链标志位 */
 			try {
 				privateChain = argv[++i];
 			}
@@ -722,7 +746,7 @@ int main(int argc, char** argv)
 				LOG(ERROR) << "Bad " << arg << " option: " << argv[i] << "\n";
 				return -1;
 			}
-		else if (arg == "--independent" && i + 1 < argc)
+		else if (arg == "--independent" && i + 1 < argc) /* 私链参数 */
 			try {
 				privateChain = argv[++i];
 				noPinning = enableDiscovery = true;
@@ -770,7 +794,7 @@ int main(int argc, char** argv)
 		else if (arg == "--ipcpath" && i + 1 < argc )
 			setIpcPath(argv[++i]);
 		else if ((arg == "--genesis-json" || arg == "--genesis") && i + 1 < argc)
-		{
+		{ /* 获取genesis.conf配置文件的参数,并填充genesisJSON字符串 */
 			try
 			{
 				genesisJSON = contentsString(argv[++i]);
@@ -782,7 +806,7 @@ int main(int argc, char** argv)
 			}
 		}
 		else if (arg == "--config" && i + 1 < argc)
-		{
+		{ /* 获取config.conf配置文件的参数,并填充configJSON字符串 */
 			try
 			{
 				setConfigPath(argv[++i]);
@@ -1119,7 +1143,7 @@ int main(int argc, char** argv)
 			noPinning = true;
 			bootstrap = false;
 		}
-		else if ( arg == "--singlepoint" )
+		else if ( arg == "--singlepoint" ) /* 单点共识模式 */
 		{
 			singlepoint = true;
 			enableDiscovery = false;
@@ -1147,10 +1171,11 @@ int main(int argc, char** argv)
 		}
 	}
 
+    /* 解析config.conf配置文件 */
 	if (!configJSON.empty())
 	{
 		try
-		{
+		{   /* 将对应的参数信息保存到struct chainParams中 */
 			chainParams = chainParams.loadConfig(configJSON);
 			//初始化日志
 			initEasylogging(chainParams);
@@ -1201,11 +1226,11 @@ int main(int argc, char** argv)
 			exit(-1);
 		}
 	}
-
+    /* 解析genesis.conf配置文件 */
 	if (!genesisJSON.empty())
 	{
 		try
-		{
+		{   /* 将对应的参数信息保存到struct chainParams中 */
 			chainParams = chainParams.loadGenesis(genesisJSON);
 		}
 		catch (...)
@@ -1222,7 +1247,7 @@ int main(int argc, char** argv)
 		return 0;
 	}
 
-
+    /* 配置是否是私链，如果是私链则初始化对应的难度信息 */
 	if (!privateChain.empty())
 	{
 		chainParams.extraData = sha3(privateChain).asBytes();
@@ -1233,15 +1258,15 @@ int main(int argc, char** argv)
 	cout << EthGrayBold "---------------FISCO BCOS--------------" EthReset << "\n";
 
 	chainParams.otherParams["allowFutureBlocks"] = "1";//默认打开
-	if (testingMode)
+	if (testingMode) /* 测试节点，不使用共识算法 */
 	{
 		chainParams.sealEngineName = "NoProof";
 	}
-	else if ( singlepoint )
+	else if ( singlepoint )  /* 单点共识模式 */
 	{
 		chainParams.sealEngineName = "SinglePoint";
 	}
-	if (  "SinglePoint" == chainParams.sealEngineName )
+	if (  "SinglePoint" == chainParams.sealEngineName ) /* 单点共识模式下的赋值 */
 	{
 		enableDiscovery = false;
 		disableDiscovery = true;
@@ -1269,7 +1294,7 @@ int main(int argc, char** argv)
 
 	jsonRPCURL = chainParams.rpcPort;
 	jsonRPCSSLURL = chainParams.rpcSSLPort;
-	setDataDir(chainParams.dataDir);
+	setDataDir(chainParams.dataDir); /* 设置节点数据的目录地址 */
 	listenIP = chainParams.listenIp;
 	if ( !listenIP.empty() )
 		listenSet = true;
@@ -1286,7 +1311,7 @@ int main(int argc, char** argv)
 	strStoragePath = chainParams.storagePath;
 
 
-	if (chainParams.vmKind == "interpreter")
+	if (chainParams.vmKind == "interpreter")  /* 参数所选引擎 (libevm目录)*/
 		VMFactory::setKind(VMKind::Interpreter);
 	else if (chainParams.vmKind == "jit")
 		VMFactory::setKind(VMKind::JIT);
@@ -1399,6 +1424,7 @@ int main(int argc, char** argv)
 	ChannelRPCServer::Ptr channelServer = std::make_shared<ChannelRPCServer>();
 
 	//建立web3网络
+	/* 调用WebThreeDirect::WebThreeDirect构造函数，根据共识算法调用对应的client类进行线程初始化 */
 	dev::WebThreeDirect web3(
 	    WebThreeDirect::composeClientVersion("eth"),
 	    getDataDir(),

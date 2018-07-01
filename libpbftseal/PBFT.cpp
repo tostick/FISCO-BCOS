@@ -333,7 +333,7 @@ void PBFT::onPBFTMsg(unsigned _id, std::shared_ptr<p2p::Capability> _peer, RLP c
 }
 
 void PBFT::workLoop() {
-	while (isWorking()) {
+	while (isWorking()) { /* 循环执行 */
 		try
 		{
 			std::pair<bool, PBFTMsgPacket> ret = m_msg_queue.tryPop(5);

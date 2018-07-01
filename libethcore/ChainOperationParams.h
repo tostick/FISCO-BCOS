@@ -58,7 +58,7 @@ struct ChainOperationParams
 	explicit operator bool() const { return accountStartNonce != Invalid256; }
 
 	/// The chain sealer name: e.g. PBFT, Raft, SinglePoint
-	std::string sealEngineName = "PBFT";
+	std::string sealEngineName = "PBFT";  /* 共识算法（可选PBFT、RAFT、SinglePoint） */
 
 	/// General chain params.
 	u256 blockReward = 0;
@@ -89,20 +89,20 @@ struct ChainOperationParams
 	bool evmEventLog = false; 
 	bool evmCoverLog = false; 
 	bool statLog = false; 
-	Address sysytemProxyAddress;
-	Address god;
+	Address sysytemProxyAddress; /* 系统路由合约地址 */
+	Address god; /* 内置链管理员账号地址 */
 
-	std::string listenIp;
-	int cryptoMod = 0;	
+	std::string listenIp; /* 节点监听IP */
+	int cryptoMod = 0;  /* 加密模式默认为0（与cryptomod.json文件中cryptomod字段保持一致  ）*/
 	int cryptoprivatekeyMod = 0;//0：no keycenter 1：keycenter
 	int ssl = 0;
-	int rpcPort = 6789;
+	int rpcPort = 6789; /* RPC监听端口 */
 	int rpcSSLPort = 6790;
-	int p2pPort = 16789;
-	std::string wallet;
-	std::string keystoreDir;
-	std::string dataDir;
-	std::string logFileConf;
+	int p2pPort = 16789; /* P2P网络监听端口 */
+	std::string wallet;  /* 钱包文件路径 */
+	std::string keystoreDir; /* 账号文件目录路径 */
+	std::string dataDir; /* 节点数据目录路径 */
+	std::string logFileConf; /* 日志配置文件路径 */
 	
 	//dfs related parameters
 	std::string nodeId;
@@ -111,11 +111,12 @@ struct ChainOperationParams
 	
 	std::string rateLimitConfig;
 	int statsInterval;
-	int channelPort = 0;
+	int channelPort = 0; /* 链上链下监听端口 */
 
-	std::string vmKind;
+	std::string vmKind; /* vm引擎 （默认 interpreter ） */
 	unsigned networkId;
-	int logVerbosity = 4;
+	int logVerbosity = 4; /* 日志级别（级别越高日志越详细，>8 TRACE日志，4<=x<8 DEBU G日志，<4 
+	INFO日志 */
 
 	u256 intervalBlockTime = 3000;
 
