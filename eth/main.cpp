@@ -97,6 +97,7 @@ static std::atomic<bool> g_silence = {false};
 #include "genesisInfoForWe.h"
 #include "GenesisInfo.h"
 
+/* help */
 void help()
 {
 	cout
